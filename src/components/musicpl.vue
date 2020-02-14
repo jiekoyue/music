@@ -1,14 +1,14 @@
 <template>
-    <div class="comment_list">
+    <div class="comment_list" ref="wrapp">
         <div>
-            <dl>
+            <dl v-for="(time,index) in plarr" :key="index">
                 <dt>
-                    <img src="https://p3.music.126.net/2cwPUmMgb6XImVwNy-FcIw==/109951163863553426.jpg"
+                    <img :src="time.user.avatarUrl"
                          alt=""/>
                 </dt>
-                <dd class="name">Teoeo_</dd>
+                <dd class="name">{{time.user.nickname}}</dd>
                 <dd class="detail">
-                    你没听出来汪老师一直在配合刘乐瑶唱吗，他大部分时间在给刘乐瑶和音，而且唱的是女生的key，因为是孩子们的节目，他想让孩子更多的展现自己的优点，所以汪老师尽量地配合刘乐瑶的声音唱，如果是汪苏泷一个人唱，他不会这样唱的。
+                    {{time.content}}
                 </dd>
             </dl>
         </div>
@@ -16,8 +16,32 @@
 </template>
 
 <script>
+	import iscroll from 'iscroll';
+
 	export default {
-		name: "musicpl"
+		name: "musicpl",
+		data() {
+			return {
+				plarr: '',
+				myis: ''
+			};
+		},
+		methods: {
+			updata(data) {
+				this.plarr = data;
+				this.$nextTick(() => {
+					this.myis.refresh();
+					this.myis.scrollTo(0, 0);
+				});
+			}
+		},
+		mounted() {
+			this.myis = new iscroll(this.$refs.wrapp, {
+				mouseWheel: true,
+				scrollbars: true,
+				interactiveScrollbars: true
+			})
+		}
 	}
 </script>
 

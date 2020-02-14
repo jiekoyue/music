@@ -3,18 +3,18 @@
         <div class="play_wrap" id="player">
             <div class="search_bar">
                 <img src="./assets/images/player_title.png" alt=""/>
-                <input type="text"/>
+                <input type="text" v-model="inpVal" @keyup.13="search"/>
             </div>
             <div class="center_con">
                 <!-- 歌曲列表-->
-                <musiclist></musiclist>
+                <musiclist ref="gqlist"></musiclist>
                 <!-- 唱片-->
-                <musicpic></musicpic>
+                <musicpic ref="alpic"></musicpic>
                 <!-- 评论列表-->
-                <musicpl></musicpl>
+                <musicpl ref="pllist"></musicpl>
             </div>
             <div class="audio_con">
-                <audio controls autoplay loop class="myaudio"></audio>
+                <audio :src="musicurl" @pause="over" @play="bging" controls autoplay loop class="myaudio"></audio>
             </div>
         </div>
     </div>
@@ -24,6 +24,7 @@
 	import musiclist from './components/musiclist.vue';
 	import musicpic from './components/musicpic.vue';
 	import musicpl from './components/musicpl.vue';
+	import axios from 'axios';
 
 	export default {
 		name: 'App',
@@ -31,8 +32,50 @@
 			musiclist,
 			musicpic,
 			musicpl
+		},
+		data() {
+			return {
+				inpVal: '',
+				musicurl: ''
+			};
+		},
+		methods: {
+			search() {
+				axios({url: 'http://183.237.67.218:3000/search?keywords=' + this.inpVal}).then(msg => {
+					window.console.log(msg);
+					this.$refs.gqlist.updata(msg.data.result.songs);
+				});
+			},
+			gqclick(id) {
+				this.musicurl = '';
+				axios({url: 'http://183.237.67.218:3000/song/url?id=' + id}).then(msg => {
+					window.console.log(msg);
+					this.musicurl = msg.data.data[0].url;
+				});
+				axios({url: 'http://183.237.67.218:3000/comment/music?id=' + id}).then(msg => {
+					window.console.log(msg);
+					this.$refs.pllist.updata(msg.data.hotComments.concat(msg.data.comments));
+				});
+				axios({url: 'http://183.237.67.218:3000/song/detail?ids=' + id}).then(msg => {
+					window.console.log(msg);
+					this.$refs.alpic.picurl = msg.data.songs[0].al.picUrl;
+				});
+			},
+			bging() {
+				this.$refs.alpic.playing = true;
+			},
+			over() {
+				this.$refs.alpic.playing = false;
+			}
+		},
+		mounted() {
+
 		}
 	}
+	// - http://183.237.67.218:3000/search?keywords= 神话               搜索歌曲时接口获取音乐列表
+	// - http://183.237.67.218:3000/song/url?id=310574                      获取音乐url
+	// - http://183.237.67.218:3000/comment/music?id=310574         获取 用户评论列表
+	// - http://183.237.67.218:3000/song/detail?ids=310574                获取 音乐详情   如图片，演唱者等
 </script>
 
 <style>
@@ -62,7 +105,7 @@
         top: 50%;
         margin-left: -400px;
         margin-top: -272px;
-        /* background-color: #f9f9f9; */
+        /*background-color: #f9f9f9;*/
     }
 
     .search_bar {
@@ -103,11 +146,11 @@
         width: 200px;
         height: 435px;
         box-sizing: border-box;
-        padding: 10px;
+        padding: 10px 0;
         list-style: none;
-        background: url('././assets/images/line.png') right center no-repeat;
+        background: url('./assets/images/line.png') right center no-repeat;
         position: relative;
-        /* overflow: hidden; */
+        overflow: hidden;
     }
 
     .song_list li {
@@ -119,6 +162,16 @@
         text-overflow: ellipsis;
         white-space: nowrap;
         cursor: pointer;
+        padding-left: 10px;
+    }
+
+    .song_list li:last-child {
+        padding-bottom: 20px;
+    }
+
+    .song_list li.newli {
+        background: url('./assets/images/zoom.png') 265px center no-repeat rgba(255, 255, 255, 0.45);
+        color: #1eacda;
     }
 
     .song_list .active {
@@ -165,6 +218,10 @@
         margin-bottom: 20px;
     }
 
+    .comment_list dl:last-child {
+        padding-bottom: 20px;
+    }
+
     .comment_list dt {
         position: absolute;
         left: 4px;
@@ -191,6 +248,11 @@
         color: #666;
         margin-top: 5px;
         line-height: 18px;
+        -webkit-line-clamp: 2;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .audio_con {
